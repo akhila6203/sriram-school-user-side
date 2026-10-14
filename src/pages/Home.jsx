@@ -23,12 +23,18 @@ import ProductCard from "../components/ProductCard";
 
 export default function Home() {
   const {
-    student,
-    currentKit,
-    kitPurchased,
-    availableProducts,
-    setLoginOpen,
-  } = useStore();
+  student,
+  currentKit,
+  availableProducts,
+  catalog,
+  catalogLoading,
+  catalogError,
+  refreshCatalog,
+  setLoginOpen,
+} = useStore();
+
+const showKit = catalog.mode === "kit" && Boolean(currentKit);
+const showProducts = catalog.mode === "individual";
 
   const [kitOpen, setKitOpen] =
     useState(false);
@@ -356,9 +362,10 @@ export default function Home() {
           BEFORE KIT PURCHASE
       ====================================================== */}
 
-      {student &&
+      {/* {student &&
         !kitPurchased &&
-        currentKit && (
+        currentKit && ( */}
+        {student && !catalogLoading && !catalogError && showKit && (
           <section
             className="
               px-3
@@ -475,17 +482,28 @@ export default function Home() {
                         className="text-[#4F39F6]"
                       />
 
-                      <span
+                      {/* <span
                         className="
-                          text-[9px]
+                          text-[14px]
                           font-extrabold
                           text-[#4F39F6]
 
-                          sm:text-[10px]
+                          sm:text-[16px]
                         "
                       >
                         Your School Kit
-                      </span>
+                      </span> */}
+                      <span
+                      className="
+                          text-[14px]
+                          font-extrabold
+                          text-[#4F39F6]
+
+                          sm:text-[16px]
+                        "
+                        >
+                          {currentKit?.name || "Your School Kit"}
+                        </span>
                     </div>
 
 
@@ -501,15 +519,15 @@ export default function Home() {
                     >
                       <h2
                         className="
-                          text-[28px]
+                          text-[30px]
                           font-black
                           leading-none
                           tracking-[-0.035em]
                           text-[#07152D]
 
                           sm:text-[32px]
-                          md:text-[31px]
-                          lg:text-[38px]
+                          md:text-[38px]
+                          lg:text-[46px]
                         "
                       >
                         Kit{" "}
@@ -520,7 +538,7 @@ export default function Home() {
                       </h2>
 
                       <Sparkles
-                        size={19}
+                        size={22}
                         className="text-[#4F39F6]"
                       />
                     </div>
@@ -528,19 +546,20 @@ export default function Home() {
 
                     <p
                       className="
-                        mt-2
+                        mt-4
 
-                        text-[11px]
-                        leading-5
+                        text-[14px]
+                        leading-7
                         text-[#71809D]
 
-                        sm:text-[12px]
-                        lg:text-[13px]
+                        sm:text-[16px]
+                        lg:text-[18px]
                       "
                     >
-                      Complete uniform
+                      {currentKit?.description || " Complete uniform essentials for your class."}
+                      {/* Complete uniform
                       essentials for your
-                      class.
+                      class. */}
                     </p>
 
 
@@ -614,16 +633,16 @@ export default function Home() {
                                 <div
                                   className={`
                                     flex
-                                    h-[28px]
-                                    w-[28px]
+                                    h-[34px]
+                                    w-[34px]
                                     shrink-0
                                     items-center
                                     justify-center
 
                                     rounded-[8px]
 
-                                    sm:h-[30px]
-                                    sm:w-[30px]
+                                    sm:h-[38px]
+                                    sm:w-[38px]
 
                                     ${
                                       index % 4 === 0
@@ -647,12 +666,12 @@ export default function Home() {
                                     flex-1
                                     truncate
 
-                                    text-[9px]
+                                    text-[14px]
                                     font-extrabold
                                     text-[#07152D]
 
-                                    sm:text-[10px]
-                                    lg:text-[11px]
+                                    sm:text-[16px]
+                                    lg:text-[18px]
                                   "
                                 >
                                   {getShortName(
@@ -677,11 +696,11 @@ export default function Home() {
 
                                     px-1.5
 
-                                    text-[8px]
+                                    text-[14px]
                                     font-black
                                     text-[#4F39F6]
 
-                                    sm:text-[9px]
+                                    sm:text-[16px]
                                   "
                                 >
                                   ×{quantity}
@@ -732,7 +751,7 @@ export default function Home() {
                         hover:bg-[#3F2BE0]
 
                         sm:min-w-[145px]
-                        sm:text-[11px]
+                        sm:text-[16px]
                       "
                     >
                       View Kit
@@ -770,9 +789,14 @@ export default function Home() {
           NO KIT
       ====================================================== */}
 
-      {student &&
+      {/* {student &&
         !kitPurchased &&
-        !currentKit && (
+        !currentKit && ( */}
+        {student &&
+  !catalogLoading &&
+  !catalogError &&
+  catalog.mode === "kit" &&
+  !currentKit && (
           <section className="px-4 py-8">
             <div
               className="
@@ -826,8 +850,9 @@ export default function Home() {
           AFTER KIT PURCHASE
       ====================================================== */}
 
-      {student &&
-        kitPurchased && (
+      {/* {student &&
+        kitPurchased && ( */}
+        {student && !catalogLoading && !catalogError && showProducts && (
           <section
             className="
               px-3
@@ -1792,6 +1817,14 @@ function getKitQuantity(
 
 
 
+
+
+
+
+
+
+
+
 // import {
 //   useEffect,
 //   useRef,
@@ -1811,7 +1844,6 @@ function getKitQuantity(
 // import KitDrawer from "../components/KitDrawer";
 // import ProductCard from "../components/ProductCard";
 
-// import schoolBanner from "../assets/images/school-banner.jpg";
 
 
 // export default function Home() {
@@ -1979,7 +2011,7 @@ function getKitQuantity(
 //                     text-slate-400
 //                   "
 //                 >
-//                   Welcome to Scholar Store
+//                   Welcome to Brassleaf
 //                 </p>
 
 //                 <h3
@@ -2011,55 +2043,23 @@ function getKitQuantity(
 
 
 //       {/* =====================================================
-//           SCHOOL BANNER
-//       ====================================================== */}
-
-//       <section
-//         className="
-//           w-full
-//           overflow-hidden
-//           bg-slate-100
-//         "
-//       >
-//         <div
-//           className="
-//             h-[150px]
-//             w-full
-
-//             sm:h-[210px]
-//             md:h-[255px]
-//             lg:h-[300px]
-//             xl:h-[330px]
-//           "
-//         >
-//           <img
-//             src={schoolBanner}
-//             alt="School Campus"
-//             className="
-//               h-full
-//               w-full
-//               object-cover
-//               object-center
-//             "
-//           />
-//         </div>
-//       </section>
-
-
-//       {/* =====================================================
 //           BEFORE LOGIN
 //       ====================================================== */}
 
 //       {!student && (
-//         <section
-//           className="
-//             px-4
-//             py-8
+        
+// <section
+//   className="
+//     mx-3 my-4 rounded-2xl
+//     border border-[#E8E7FF]
+//     bg-[#F0F0FF]
+//     px-5 py-10
+//     sm:mx-6 sm:py-12
+//     md:mx-8 md:py-14
+//     lg:mx-auto lg:max-w-[1450px]
+//   "
+// >
 
-//             sm:px-6
-//             sm:py-10
-//           "
-//         >
 //           <div
 //             className="
 //               mx-auto
@@ -2154,6 +2154,27 @@ function getKitQuantity(
 //           </div>
 //         </section>
 //       )}
+
+
+// {student && (
+//   <section className="w-full bg-[#F0F0FF]">
+//     <div className="w-full px-4 py-3 text-center sm:py-4">
+//       <h1
+//         className="
+//           text-[19px] font-black
+//           tracking-tight text-[#07152D]
+//           sm:text-[23px]
+//           md:text-[27px]
+//         "
+//       >
+//         Welcome to{" "}
+//         <span className="text-[#5039F6]">
+//           Brassleaf
+//         </span>
+//       </h1>
+//     </div>
+//   </section>
+// )}
 
 
 //       {/* =====================================================
@@ -2669,8 +2690,9 @@ function getKitQuantity(
 //                     lg:text-[33px]
 //                   "
 //                 >
-//                   Select Your Product and
-//                   Order Uniform
+//                   {/* Select Your Product and
+//                   Order Uniform */}
+//                   Shop Your School Uniforms
 //                 </h2>
 
 //                 <p
@@ -3591,5 +3613,13 @@ function getKitQuantity(
 
 //   return 1;
 // }
+
+
+
+
+
+
+
+
 
 

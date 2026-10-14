@@ -25,11 +25,12 @@ export default function KitDrawer({
   const navigate = useNavigate();
 
   const {
-    cart,
-    currentKit,
-    addToCart,
-    kitPurchased,
-  } = useStore();
+  cart,
+  currentKit,
+  student,
+  addToCart,
+  kitPurchased,
+} = useStore();
 
 
   /* =====================================================
@@ -374,8 +375,9 @@ export default function KitDrawer({
      ADD KIT
   ====================================================== */
 
-  const handleAddKitToCart =
-    () => {
+  // const handleAddKitToCart =
+  //   () => {
+    const handleAddKitToCart = async () => {
 
       if (
         !currentKit ||
@@ -389,15 +391,15 @@ export default function KitDrawer({
          ALREADY PURCHASED
       ========================================== */
 
-      if (kitPurchased) {
+      // if (kitPurchased) {
 
-        setMessage(
-          "Your mandatory kit has already been purchased."
-        );
+      //   setMessage(
+      //     "Your mandatory kit has already been purchased."
+      //   );
 
-        return;
+      //   return;
 
-      }
+      // }
 
 
       /* =========================================
@@ -460,50 +462,31 @@ export default function KitDrawer({
 
       try {
 
-        currentKit.products.forEach(
-          (product) => {
+        for (const product of currentKit.products) {
 
-            const selectedSize =
-              product.hasSize
-                ? selectedSizes[
-                    product.id
-                  ]
-                : null;
+  const selectedSize = product.hasSize
+    ? selectedSizes[product.id]
+    : null;
 
+  const selectedPrice = getProductPrice(product);
 
-            const selectedPrice =
-              getProductPrice(
-                product
-              );
+  const fixedQuantity = Number(
+    product.kitQuantity || 1
+  );
 
+  const cartProduct = {
+    ...product,
+    price: selectedPrice,
+    kitQuantity: fixedQuantity,
+  };
 
-            const fixedQuantity =
-              Number(
-                product.kitQuantity ||
-                  1
-              );
-
-
-            const cartProduct = {
-              ...product,
-
-              price:
-                selectedPrice,
-
-              kitQuantity:
-                fixedQuantity,
-            };
-
-
-            addToCart(
-              cartProduct,
-              selectedSize,
-              true,
-              fixedQuantity
-            );
-
-          }
-        );
+  await addToCart(
+    cartProduct,
+    selectedSize,
+    true,
+    fixedQuantity
+  );
+}
 
 
         setMessage(
@@ -519,11 +502,21 @@ export default function KitDrawer({
 
         }, 350);
 
-      } finally {
+        } catch (error) {
+  console.error("Kit add to cart error:", error);
 
-        setAdding(false);
+  setMessage(
+    error?.message ||
+    "Unable to add kit to cart. Please try again."
+  );
+} finally {
+  setAdding(false);
+}
+      // } finally {
 
-      }
+      //   setAdding(false);
+
+      // }
 
     };
 
@@ -786,8 +779,13 @@ bg-[#EEF2FF]
                 sm:text-xl
               "
             >
-              {currentKit.name ||
-                "Select Your Kit"}
+             Class {student?.className ||
+              currentKit?.className ||
+              "Your Class"}  Complete School Kit
+              {/* {currentKit.name ||
+                "Select Your Kit"}  Complete School Kit */}
+
+
             </h2>
 
           </div>
