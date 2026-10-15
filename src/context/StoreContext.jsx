@@ -528,12 +528,18 @@ const logout = async () => {
   await refreshCart();
 };
 
+// const cartSubtotal = Number(cartSummary.subtotal ?? 0);
+
+// // const shippingAmount =
+// //   cart.length > 0 ? 200 : 0;
+//   const shippingAmount =
+//   cart.length > 0 ? 0 : 0;
 const cartSubtotal = Number(cartSummary.subtotal ?? 0);
 
-// const shippingAmount =
-//   cart.length > 0 ? 200 : 0;
-  const shippingAmount =
-  cart.length > 0 ? 0 : 0;
+const shippingAmount =
+  cart.length > 0
+    ? Number(cartSummary.shipping ?? 0)
+    : 0;
 
 const gstAmount = Number(
   cartSummary.gstIncluded ??

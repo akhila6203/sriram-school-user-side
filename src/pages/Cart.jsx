@@ -86,9 +86,10 @@ const waitForVerifiedPayment = async (orderNumber) => {
     );
   }
 
-  throw new Error(
-    "Payment confirmation is pending. Please check My Orders before paying again."
-  );
+ throw new Error(
+  "Your payment is awaiting confirmation from Paytm. " +
+  "Please check My Orders. Do not pay again until the payment status is verified."
+);
 };
 
 export default function Cart() {
@@ -158,7 +159,11 @@ const hasKit = visibleCart.some(
   const visibleSubtotal = Number(cartSubtotal || 0);
 
 // const shipping = visibleCart.length > 0 ? 200 : 0;
-const shipping = visibleCart.length > 0 ? 0 : 0;
+// const shipping = visibleCart.length > 0 ? 0 : 0;
+const shipping =
+  visibleCart.length > 0
+    ? Number(shippingAmount ?? 0)
+    : 0;
 
 const total = Number(cartTotal || 0);
 
