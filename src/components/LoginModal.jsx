@@ -160,7 +160,7 @@ useEffect(() => {
 
               <div>
                 <h3 className="text-lg font-bold">
-                  Scholar Store
+                  BrassLead Store
                 </h3>
 
                 <p className="text-xs text-indigo-100">
@@ -487,7 +487,7 @@ useEffect(() => {
 
 //               <div>
 //                 <h3 className="text-lg font-bold">
-//                   Scholar Store
+//                   BrassLeaf Store
 //                 </h3>
 
 //                 <p className="text-xs text-indigo-100">

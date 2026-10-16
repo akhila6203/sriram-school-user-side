@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import brassLeafLogo from "../assets/images/brassleaf-logo2.png";
 
 export default function Footer() {
   return (
@@ -45,59 +46,30 @@ export default function Footer() {
         ====================================== */}
         <div className="lg:pr-5">
           <div className="mb-5 flex items-center gap-3">
-            <div
-              className="
-                flex
-                h-11
-                w-11
-                shrink-0
-                items-center
-                justify-center
-                rounded-xl
-                bg-indigo-600
-                text-[18px]
-                font-black
-                text-white
-              "
-            >
-              S
-            </div>
+             <img
+                  src={brassLeafLogo}
+                  alt="Brassleaf"
+                  className="
+                    h-full
+                    w-full
+                    object-contain
+                    object-left
+                  "
+                />
 
-            <div>
-              <h2
-                className="
-                  text-[19px]
-                  font-extrabold
-                  leading-tight
-                  text-white
-                "
-              >
-                School
-              </h2>
-
-              <p
-                className="
-                  mt-1
-                  text-[13px]
-                  font-medium
-                  text-slate-400
-                "
-              >
-                School essentials made simple
-              </p>
-            </div>
+            
           </div>
 
           <p
             className="
-              max-w-[430px]
+              max-w-[400px]
               text-[15px]
               leading-[1.8]
               text-slate-400
 
               sm:text-[15px]
 
-              lg:max-w-[470px]
+              lg:max-w-[400px]
               lg:leading-[1.75]
             "
           >
