@@ -142,17 +142,32 @@ export const openPaytmCheckout = async (payment) => {
         redirect: false,
       },
       handler: {
+        // notifyMerchant: (eventName) => {
+        //   if (eventName === "APP_CLOSED") {
+        //     settle({ closed: true });
+        //   }
+        // },
         notifyMerchant: (eventName) => {
-          if (eventName === "APP_CLOSED") {
-            settle({ closed: true });
-          }
-        },
+  if (eventName === "APP_CLOSED") {
+    settle({
+      closed: true,
+      attempted: false,
+    });
+  }
+},
         transactionStatus: (result) => {
-          settle({
-            closed: false,
-            result,
-          });
-        },
+  settle({
+    closed: false,
+    attempted: true,
+    result,
+  });
+},
+        // transactionStatus: (result) => {
+        //   settle({
+        //     closed: false,
+        //     result,
+        //   });
+        // },
       },
     };
 
@@ -216,160 +231,6 @@ export const closePaytmCheckout = async () => {
     return false;
   }
 };
-
-
-
-
-
-// let loadedScriptUrl = "";
-
-// export const openPaytmCheckout = (payment) =>
-//   new Promise((resolve, reject) => {
-//     const { mid, orderId, txnToken, amount, host } = payment;
-
-//     if (!mid || !orderId || !txnToken || !amount) {
-//       reject(new Error("Incomplete Paytm payment details"));
-//       return;
-//     }
-
-//     const allowedHosts = [
-//       "securegw-stage.paytm.in",
-//       "securegw.paytm.in",
-//     ];
-
-//     if (!allowedHosts.includes(host)) {
-//       reject(new Error("Invalid Paytm gateway host"));
-//       return;
-//     }
-
-//     const scriptUrl =
-//       `https://${host}/merchantpgpui/checkoutjs/merchants/` +
-//       `${encodeURIComponent(mid)}.js`;
-
-//     let settled = false;
-
-//     const finish = (value) => {
-//       if (settled) return;
-//       settled = true;
-//       resolve(value);
-//     };
-
-//     const fail = (error) => {
-//       if (settled) return;
-//       settled = true;
-//       reject(error);
-//     };
-
-//     const startCheckout = async () => {
-//       try {
-//         const checkout = window.Paytm?.CheckoutJS;
-
-//         if (!checkout) {
-//           throw new Error("Paytm CheckoutJS not available");
-//         }
-
-//         const config = {
-//           root: "",
-//           flow: "DEFAULT",
-//           data: {
-//             orderId,
-//             token: txnToken,
-//             tokenType: "TXN_TOKEN",
-//             amount: String(amount),
-//           },
-//           merchant: {
-//             redirect: false,
-//           },
-//           handler: {
-//             notifyMerchant: (eventName) => {
-//               if (eventName === "APP_CLOSED") {
-//                 finish({ closed: true });
-//               }
-//             },
-//             transactionStatus: (result) => {
-//               finish({
-//                 closed: false,
-//                 result,
-//               });
-//             },
-//           },
-//         };
-
-//         // Wait for the Paytm SDK to finish loading.
-//         if (typeof checkout.onLoad === "function") {
-//           await new Promise((resolveReady, rejectReady) => {
-//             try {
-//               checkout.onLoad(() => resolveReady());
-//             } catch (error) {
-//               rejectReady(error);
-//             }
-//           });
-//         }
-
-//         if (typeof checkout.init !== "function") {
-//           throw new Error("Paytm checkout init is unavailable");
-//         }
-
-//         await checkout.init(config);
-
-//         if (typeof checkout.invoke !== "function") {
-//           throw new Error("Paytm checkout invoke is unavailable");
-//         }
-
-//         await checkout.invoke();
-//       } catch (error) {
-//         fail(error);
-//       }
-//     };
-
-//     if (
-//       loadedScriptUrl === scriptUrl &&
-//       window.Paytm?.CheckoutJS
-//     ) {
-//       startCheckout();
-//       return;
-//     }
-
-//     const script = document.createElement("script");
-
-//     script.src = scriptUrl;
-//     script.async = true;
-
-//     script.onload = () => {
-//       loadedScriptUrl = scriptUrl;
-//       startCheckout();
-//     };
-
-//     script.onerror = () => {
-//       fail(new Error("Unable to load Paytm checkout"));
-//     };
-
-//     document.body.appendChild(script);
-//   });
-
-// export const closePaytmCheckout = async () => {
-//   const checkout = window.Paytm?.CheckoutJS;
-
-//   if (!checkout) return false;
-
-//   try {
-//     if (typeof checkout.close !== "function") {
-//       console.warn("Paytm SDK does not expose close()");
-//       return false;
-//     }
-
-//     await Promise.race([
-//       Promise.resolve(checkout.close()),
-//       new Promise((resolve) => setTimeout(resolve, 1500)),
-//     ]);
-
-//     return true;
-//   } catch (error) {
-//     console.warn("Unable to close Paytm checkout:", error);
-//     return false;
-//   }
-// };
-
 
 
 

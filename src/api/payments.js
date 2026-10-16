@@ -20,3 +20,12 @@ export const getPaytmPaymentStatus = async (
 
   return data.data;
 };
+
+export const recordPaytmAttempt = async (orderId) => {
+  const { data } = await api.post(
+    "/storefront/payments/paytm/attempt",
+    { orderId }
+  );
+
+  return data.data;
+};

@@ -115,11 +115,11 @@ const getOrderAmounts = (order) => {
   );
 
   const shipping = Number(
-    order.shippingAmount ??
-    order.shippingCharge ??
-    order.shipping ??
-    200
-  );
+  order.shipping ??
+  order.shippingAmount ??
+  order.shippingCharge ??
+  0
+);
 
   // GST is already included in the product price.
   // Never add this amount to the final total.

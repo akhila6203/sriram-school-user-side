@@ -15,9 +15,11 @@ import {
   Phone,
   IdCard,
 } from "lucide-react";
+
 import {
   initiatePaytmPayment,
   getPaytmPaymentStatus,
+  recordPaytmAttempt,
 } from "../api/payments";
 
 import {
@@ -303,42 +305,42 @@ if (!orderNumber) {
   throw new Error("Order number missing for payment verification.");
 }
 
-const checkoutOutcome = openPaytmCheckout(payment).then(
-  (result) => ({ type: "checkout", result }),
-  (error) => ({ type: "checkout-error", error })
-);
+const checkoutResult = await openPaytmCheckout(payment);
 
-const verificationOutcome = waitForVerifiedPayment(
-  orderNumber
-).then(
-  (result) => ({ type: "verified", result }),
-  (error) => ({ type: "verification-error", error })
-);
+if (checkoutResult?.closed) {
+  let latest;
 
-// The Paytm popup response is not proof of payment.
-// Only the backend's verified status can confirm payment.
-const first = await Promise.race([
-  checkoutOutcome,
-  verificationOutcome,
-]);
-
-let verified;
-
-if (first.type === "verified") {
-  verified = first.result;
-} else if (first.type === "verification-error") {
-  throw first.error;
-} else {
-  // Even if the popup closes or fails, check whether
-  // Paytm has already processed the transaction.
-  const outcome = await verificationOutcome;
-
-  if (outcome.type === "verification-error") {
-    throw outcome.error;
+  try {
+    latest = await getPaytmPaymentStatus(orderNumber);
+  } catch (statusError) {
+    setError(
+      "Payment window closed. Unable to verify Paytm status. " +
+      "Please check your bank before trying again."
+    );
+    return;
   }
 
-  verified = outcome.result;
+  const paymentStatus = String(
+    latest?.paymentStatus || ""
+  ).toLowerCase();
+
+  if (paymentStatus !== "paid") {
+    setError(
+      paymentStatus === "failed"
+        ? "Payment was not successful. Please try again."
+        : "Payment window closed. Payment is not yet confirmed. " +
+          "Please check your bank before trying again."
+    );
+    return;
+  }
+} else if (checkoutResult?.attempted) {
+  await recordPaytmAttempt(order.id);
 }
+else if (checkoutResult?.attempted) {
+  await recordPaytmAttempt(order.id);
+}
+
+const verified = await waitForVerifiedPayment(orderNumber);
 
 if (
   String(verified?.paymentStatus || "").toLowerCase() !==
@@ -346,6 +348,26 @@ if (
 ) {
   throw new Error("Payment not confirmed.");
 }
+
+// let verified;
+
+// if (first.type === "verified") {
+//   verified = first.result;
+// } else if (first.type === "verification-error") {
+//   throw first.error;
+// } else {
+//   // Even if the popup closes or fails, check whether
+//   // Paytm has already processed the transaction.
+//   const outcome = await verificationOutcome;
+
+//   if (outcome.type === "verification-error") {
+//     throw outcome.error;
+//   }
+
+//   verified = outcome.result;
+// }
+
+
 
 
    // Payment already verified as paid above.
