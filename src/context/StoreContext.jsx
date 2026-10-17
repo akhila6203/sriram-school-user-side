@@ -122,6 +122,8 @@ images: (
 
 export function StoreProvider({ children }) {
   const [student, setStudent] = useState(null);
+  const [welcomeLoginId, setWelcomeLoginId] =
+  useState(0);
   const [profile, setProfile] = useState(null);
   const [catalog, setCatalog] = useState(emptyCatalog);
   const [catalogLoading, setCatalogLoading] = useState(false);
@@ -236,9 +238,29 @@ const refreshCart = async () => {
         ? data.orders
         : [];
 
-  setOrders(result);
+        
+const mappedOrders = result.map((order) => ({
+  ...order,
+  items: (order.items || []).map((item) => ({
+    ...item,
+    image: resolveImageUrl(
+      item.imageUrl ||
+      item.image ||
+      item.productImage ||
+      item.product?.imageUrl ||
+      item.product?.image ||
+      ""
+    ),
+  })),
+}));
 
-  return result;
+setOrders(mappedOrders);
+
+return mappedOrders;
+
+  // setOrders(result);
+
+  // return result;
 };
 
   const refreshAddresses = async () => {
@@ -289,6 +311,11 @@ const refreshCart = async () => {
       setStudent(s);
       setProfile(s);
       setLoginOpen(false);
+
+      
+refreshCart().catch((error) => {
+  console.error("Cart loading failed after session restore:", error);
+});
 
       // Fetch complete student details from backend
 refreshProfile().catch((error) => {
@@ -341,16 +368,20 @@ refreshAddresses().catch((error) => {
     setStudent(s);
     setProfile(s);
 
+    setWelcomeLoginId((previous) => previous + 1);
 
     setCart([]);
     setAddresses([]);
     setOrders([]);
+    setCartSummary({
+  subtotal: 0,
+  gstIncluded: 0,
+});
 
     setLoginOpen(false);
 
-        // Fetch logged-in student's complete profile
-refreshProfile().catch((error) => {
-  console.error("Profile loading failed:", error);
+refreshCart().catch((error) => {
+  console.error("Cart loading failed after login:", error);
 });
 
 refreshAddresses().catch((error) => {
@@ -588,7 +619,7 @@ const cartTotal = Number(
 };
 
   const value = {
-    student, profile, authLoading, login, logout, loginOpen, setLoginOpen,
+    student, profile, authLoading, login, logout, loginOpen, setLoginOpen, welcomeLoginId,
     catalog, catalogLoading, catalogError, loadCatalog, refreshCatalog,
     updateProfile, refreshProfile,
     addresses, defaultAddress, addAddress, updateAddress, deleteAddress, setDefaultAddress, refreshAddresses,

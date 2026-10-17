@@ -507,6 +507,43 @@ export default function Header() {
 
           </Link>
 
+          
+{/* =====================================
+    MOBILE LOGOUT
+    Visible only after student login
+====================================== */}
+
+{student && (
+  <button
+    type="button"
+    onClick={logout}
+    title="Logout"
+    aria-label="Logout"
+    className="
+      flex
+      h-9
+      w-9
+      shrink-0
+      items-center
+      justify-center
+      rounded-full
+      border
+      border-red-100
+      bg-red-50
+      text-red-600
+      transition-all
+      duration-200
+      hover:bg-red-100
+      active:scale-95
+      min-[380px]:h-10
+      min-[380px]:w-10
+    "
+  >
+    <LogOut size={18} />
+  </button>
+)}
+
+
         </div>
 
       </div>

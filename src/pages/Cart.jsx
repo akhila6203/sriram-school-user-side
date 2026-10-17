@@ -336,9 +336,7 @@ if (checkoutResult?.closed) {
 } else if (checkoutResult?.attempted) {
   await recordPaytmAttempt(order.id);
 }
-else if (checkoutResult?.attempted) {
-  await recordPaytmAttempt(order.id);
-}
+
 
 const verified = await waitForVerifiedPayment(orderNumber);
 

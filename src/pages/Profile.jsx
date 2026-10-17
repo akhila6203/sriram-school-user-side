@@ -146,7 +146,6 @@ const getOrderAmounts = (order) => {
    ORDER PDF
 ========================================= */
 
-
 const downloadOrderPDF = async (order, student) => {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -156,28 +155,27 @@ const downloadOrderPDF = async (order, student) => {
 
   const logo = await loadLogoForPDF();
 
-  const left = 16;
-  const right = 194;
-  const pageHeight = 297;
+  const left = 15;
+  const right = 195;
+  const pageBottom = 266;
 
-  const dark = [25, 32, 46];
-  const gray = [95, 105, 120];
+  const navy = [14, 29, 58];
+  const muted = [62, 75, 100];
 
-  const text = (value) =>
-    value === null ||
-    value === undefined ||
-    String(value).trim() === ""
+  const value = (v) =>
+    v === null || v === undefined || String(v).trim() === ""
       ? "-"
-      : String(value);
+      : String(v);
 
-  const amount = (value) =>
-    `Rs. ${Number(value || 0).toFixed(2)}`;
+  const amount = (v) =>
+    `Rs. ${Number(v || 0).toFixed(2)}`;
 
-  const date = (value) => formatDate(value);
+  const customer = {
+    ...(student || {}),
+    ...(order.student || {}),
+  };
 
-  const items = Array.isArray(order.items)
-    ? order.items
-    : [];
+  const items = Array.isArray(order.items) ? order.items : [];
 
   const subtotal = Number(
     order.subtotal ??
@@ -187,7 +185,7 @@ const downloadOrderPDF = async (order, student) => {
         sum +
         Number(
           item.total ??
-          Number(item.price || 0) *
+          Number(item.price ?? item.unitPrice ?? 0) *
             Number(item.quantity || 1)
         ),
       0
@@ -205,106 +203,68 @@ const downloadOrderPDF = async (order, student) => {
     order.shippingAmount ??
     order.shippingCharge ??
     order.shipping ??
-    Math.max(0, total - subtotal)
+    0
   );
 
-  const gst =
+  const gst = Number(
     order.gstIncluded ??
     order.gstAmount ??
     order.gst_amount ??
-    null;
+    0
+  );
 
-  const customer = {
-    ...student,
-    ...(order.student || {}),
-  };
+  const orderNumber = value(order.orderNumber || order.id);
 
-  const customerAddress =
-    order.shippingAddress ||
-    customer.address ||
-    customer.fullAddress ||
-    "";
+  const addressData =
+    order.shippingAddress || customer.address || "";
 
-  const formattedAddress =
-    typeof customerAddress === "string"
-      ? customerAddress
+  const address =
+    typeof addressData === "string"
+      ? addressData
       : [
-          customerAddress.addressLine1,
-          customerAddress.addressLine2,
-          customerAddress.address1,
-          customerAddress.city,
-          customerAddress.state,
-          customerAddress.pincode,
+          addressData.addressLine1,
+          addressData.addressLine2,
+          addressData.address1,
+          addressData.city,
+          addressData.state,
+          addressData.pincode,
         ]
           .filter(Boolean)
           .join(", ");
 
-  const orderNumber = text(
-    order.orderNumber || order.id
-  );
-
-  const invoiceNumber =
-    order.invoiceNumber ||
-    order.invoice_number ||
-    null;
-
-  let y = 16;
-
-  const ensureSpace = (height = 16) => {
-    if (y + height > pageHeight - 26) {
-      doc.addPage();
-      y = 20;
-    }
+  const drawLine = (y, start = left, end = right) => {
+    doc.setDrawColor(194, 202, 214);
+    doc.setLineWidth(0.25);
+    doc.line(start, y, end, y);
   };
 
-  const divider = () => {
-    doc.setDrawColor(220, 225, 232);
-    doc.line(left, y, right, y);
-  };
-
-  const field = (label, value, x, yy, width = 76) => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...dark);
-    doc.text(`${label}:`, x, yy);
+  const drawFooter = () => {
+    drawLine(282);
 
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(...gray);
+    doc.setFontSize(7);
+    doc.setTextColor(...muted);
 
-    const lines = doc.splitTextToSize(
-      text(value),
-      width
+    doc.text(
+      "Note: Any exchanges should be done at the BrassLeaf, Punjagutta store only",
+      105,
+      288,
+      { align: "center" }
     );
-
-    doc.text(lines, x + 29, yy);
-
-    return Math.max(7, lines.length * 4.5);
   };
 
-  // HEADER: LOGO LEFT, ADDRESS RIGHT
+  // HEADER — same layout as reference invoice
+  doc.addImage(logo, "JPEG", left, 10, 59, 28);
 
-  doc.addImage(
-    logo,
-    "JPEG",
-    left,
-    12,
-    38,
-    18
-  );
-
-  doc.setTextColor(...dark);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-
-  doc.text("BrassLeaf", right, 15, {
-    align: "right",
-  });
+  doc.setFontSize(12);
+  doc.setTextColor(...navy);
+  doc.text("BrassLeaf", 116, 14);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...gray);
+  doc.setFontSize(7.5);
 
-  const businessAddress = [
+  const businessLines = [
     "6-3-666/B, Pillar No. #1118",
     "Erramanzil Road, Panjagutta,",
     "Hyderabad - 500082",
@@ -312,150 +272,119 @@ const downloadOrderPDF = async (order, student) => {
     "GSTIN: 36AACFB1506E1Z5",
   ];
 
-  businessAddress.forEach((line, index) => {
-    doc.text(line, right, 20 + index * 4, {
-      align: "right",
-    });
+  businessLines.forEach((line, index) => {
+    doc.text(line, 116, 22 + index * 4.1);
   });
-
-  y = 47;
-  divider();
-  y += 13;
-
-  // INVOICE HEADING
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(19);
-  doc.setTextColor(...dark);
-  doc.text("INVOICE", left, y);
+  doc.text("INVOICE", left, 57);
 
-  y += 14;
+  // STUDENT DETAILS — two columns
+  const drawField = (label, fieldValue, x, y, labelWidth, maxWidth) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...navy);
+    doc.text(`${label}:`, x, y);
 
-  // CUSTOMER LEFT, ORDER INFORMATION RIGHT
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
 
-  const detailsTop = y;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.text(
-    text(customer.name || customer.studentName),
-    left,
-    y
-  );
-
-  y += 7;
-
-  const customerLines = [
-    formattedAddress,
-    customer.email,
-    customer.phone || customer.mobile,
-  ].filter(Boolean);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...gray);
-
-  customerLines.forEach((value) => {
     const lines = doc.splitTextToSize(
-      text(value),
-      76
+      value(fieldValue),
+      maxWidth
     );
 
-    doc.text(lines, left, y);
-    y += lines.length * 4.7 + 2;
+    doc.text(lines, x + labelWidth, y);
+
+    return Math.max(8.5, lines.length * 4.3 + 3);
+  };
+
+  let leftY = 76;
+  let rightY = 76;
+
+  const leftFields = [
+    ["Name", customer.name || customer.studentName],
+    [
+      "Admission Number",
+      customer.admissionNo || customer.admissionNumber,
+    ],
+    ["Address", address],
+    ["Class", customer.className || customer.class],
+    ["Mobile Number", customer.phone || customer.mobile],
+    ["Email Address", customer.email],
+    ["Gender", customer.gender],
+  ];
+
+  leftFields.forEach(([label, fieldValue]) => {
+    leftY += drawField(
+      label,
+      fieldValue,
+      left,
+      leftY,
+      42,
+      46
+    );
   });
 
-  const customerEnd = y;
+  const rightFields = [
+    ["Order Number", orderNumber],
+    [
+      "Order Date",
+      formatDate(order.createdAt || order.created_at),
+    ],
+    [
+      "Payment Method",
+      order.paymentMethod ||
+        order.payment_method ||
+        "Paytm",
+    ],
+  ];
 
-  let rightY = detailsTop;
-
-  if (invoiceNumber) {
-    rightY += field(
-      "Invoice Number",
-      invoiceNumber,
-      111,
+  rightFields.forEach(([label, fieldValue]) => {
+    rightY += drawField(
+      label,
+      fieldValue,
+      116,
       rightY,
-      49
+      41,
+      36
     );
-  }
+  });
 
-  rightY += field(
-    "Order Number",
-    orderNumber,
-    111,
-    rightY,
-    49
-  );
+  // No Invoice Number or Invoice Date
 
-  rightY += field(
-    "Order Date",
-    date(order.createdAt || order.created_at),
-    111,
-    rightY,
-    49
-  );
-
-  if (invoiceNumber) {
-    rightY += field(
-      "Invoice Date",
-      date(
-        order.invoiceDate ||
-        order.invoice_date ||
-        order.createdAt
-      ),
-      111,
-      rightY,
-      49
-    );
-  }
-
-  rightY += field(
-    "Payment Method",
-    order.paymentMethod ||
-      order.payment_method ||
-      "Paytm Payment Gateway",
-    111,
-    rightY,
-    49
-  );
-
-  y = Math.max(customerEnd, rightY) + 12;
-
-  // PRODUCTS TABLE
+  let y = Math.max(leftY, rightY) + 12;
 
   const drawTableHeader = () => {
-    doc.setFillColor(245, 247, 251);
-    doc.rect(left, y, right - left, 12, "F");
-
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(...dark);
+    doc.setFontSize(8.5);
+    doc.setTextColor(...navy);
 
-    doc.text("Product", left + 4, y + 8);
-    doc.text("Quantity", 133, y + 8, {
-      align: "center",
-    });
-    doc.text("Price", right - 4, y + 8, {
-      align: "right",
-    });
+    doc.text("Product", left, y);
+    doc.text("Quantity", 145, y, { align: "center" });
+    doc.text("Price", right, y, { align: "right" });
 
-    y += 17;
+    drawLine(y + 5);
+    y += 13;
   };
 
   drawTableHeader();
 
   items.forEach((item) => {
-    const name = text(
-      item.name ||
-      item.productName ||
-      item.name_snapshot
+    const name = value(
+      item.name || item.productName || item.name_snapshot
     );
 
-    const quantity = Number(
-      item.quantity || 1
-    );
+    const size =
+      item.size ||
+      item.option_snapshot ||
+      item.variant?.label ||
+      "";
 
-    const itemPrice = Number(
+    const quantity = Number(item.quantity || 1);
+
+    const itemTotal = Number(
       item.total ??
       Number(
         item.price ??
@@ -465,122 +394,94 @@ const downloadOrderPDF = async (order, student) => {
       ) * quantity
     );
 
-    const nameLines = doc.splitTextToSize(
-      name,
-      91
-    );
-
-    const size = item.size ||
-      item.option_snapshot ||
-      "";
+    const nameLines = doc.splitTextToSize(name, 100);
 
     const rowHeight = Math.max(
-      15,
-      nameLines.length * 5 + (size ? 7 : 3)
+      16,
+      nameLines.length * 4.5 + (size ? 8 : 3)
     );
 
-    ensureSpace(rowHeight + 12);
-
-    if (y === 20) {
+    if (y + rowHeight > pageBottom) {
+      drawFooter();
+      doc.addPage();
+      y = 22;
       drawTableHeader();
     }
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(...dark);
-
-    doc.text(nameLines, left + 4, y);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...navy);
+    doc.text(nameLines, left, y);
 
     if (size) {
-      doc.setFontSize(8);
-      doc.setTextColor(...gray);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...muted);
       doc.text(
-        `Size: ${text(size)}`,
-        left + 4,
-        y + nameLines.length * 5 + 1
+        `Size: ${value(size)}`,
+        left,
+        y + nameLines.length * 4.5 + 1
       );
     }
 
-    doc.setFontSize(9);
-    doc.setTextColor(...dark);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...navy);
 
-    doc.text(String(quantity), 133, y, {
+    doc.text(String(quantity), 145, y, {
       align: "center",
     });
 
-    doc.text(amount(itemPrice), right - 4, y, {
+    doc.text(amount(itemTotal), right, y, {
       align: "right",
     });
 
     y += rowHeight;
-
-    divider();
-    y += 8;
+    drawLine(y);
+    y += 9;
   });
 
-  // TOTALS
+  // TOTALS — right aligned, as in reference
+  if (y + 65 > pageBottom) {
+    drawFooter();
+    doc.addPage();
+    y = 30;
+  }
 
-  ensureSpace(58);
   y += 5;
 
-  const totalRow = (label, value, bold = false) => {
+  const totalRow = (label, price, bold = false) => {
     doc.setFont(
       "helvetica",
       bold ? "bold" : "normal"
     );
 
-    doc.setFontSize(bold ? 11 : 9);
-    doc.setTextColor(...dark);
+    doc.setFontSize(bold ? 10 : 8.5);
+    doc.setTextColor(...navy);
 
-    doc.text(label, 119, y);
-
-    doc.text(amount(value), right, y, {
+    doc.text(label, 112, y);
+    doc.text(amount(price), right, y, {
       align: "right",
     });
 
-    y += bold ? 11 : 9;
+    y += bold ? 12 : 10;
   };
 
   totalRow("Subtotal", subtotal);
   totalRow("Shipping", shipping);
+  totalRow("GST (Included CGST & SGST)", gst);
 
-  if (gst !== null) {
-    totalRow("GST (Included)", Number(gst));
-  }
-
-  doc.setDrawColor(220, 225, 232);
-  doc.line(119, y, right, y);
-  y += 9;
+  drawLine(y + 2, 112, right);
+  y += 11;
 
   totalRow("Total Paid", total, true);
 
-  // FOOTER ON EVERY PAGE
-
+  // Footer on each page
   const pages = doc.internal.getNumberOfPages();
 
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);
-
-    doc.setDrawColor(225, 229, 235);
-    doc.line(left, 274, right, 274);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...gray);
-
-    doc.text(
-      "Note: Any exchanges should be done at the BrassLeaf, Punjagutta store only.",
-      105,
-      282,
-      { align: "center" }
-    );
-
-    doc.text(
-      `Page ${page} of ${pages}`,
-      right,
-      290,
-      { align: "right" }
-    );
+    drawFooter();
   }
 
   const safeNumber = orderNumber.replace(

@@ -1,8 +1,7 @@
 
-
 import {
   useEffect,
-  useRef,
+  // useRef,
   useState,
 } from "react";
 
@@ -31,6 +30,7 @@ export default function Home() {
   catalogError,
   refreshCatalog,
   setLoginOpen,
+  welcomeLoginId,
 } = useStore();
 
 const showKit = catalog.mode === "kit" && Boolean(currentKit);
@@ -42,42 +42,57 @@ const showProducts = catalog.mode === "individual";
   const [welcomePopup, setWelcomePopup] =
     useState(false);
 
-  const previousStudentRef =
-    useRef(student?.admissionNo || null);
-
-
   /* =====================================================
      LOGIN WELCOME POPUP
   ====================================================== */
+useEffect(() => {
+  if (!student || welcomeLoginId === 0) {
+    setWelcomePopup(false);
+    return;
+  }
 
-  useEffect(() => {
-    const previousStudent =
-      previousStudentRef.current;
+  setWelcomePopup(true);
 
-    const currentStudent =
-      student?.admissionNo || null;
+  const timer = window.setTimeout(() => {
+    setWelcomePopup(false);
+  }, 3500);
 
-    if (
-      currentStudent &&
-      previousStudent !== currentStudent
-    ) {
-      setWelcomePopup(true);
+  return () => {
+    window.clearTimeout(timer);
+  };
+}, [welcomeLoginId, student?.id]);
 
-      const timer =
-        window.setTimeout(() => {
-          setWelcomePopup(false);
-        }, 3500);
+  // const previousStudentRef =
+  //   useRef(student?.admissionNo || null);
+  
+  // useEffect(() => {
+  //   const previousStudent =
+  //     previousStudentRef.current;
 
-      previousStudentRef.current =
-        currentStudent;
+  //   const currentStudent =
+  //     student?.admissionNo || null;
 
-      return () =>
-        window.clearTimeout(timer);
-    }
+  //   if (
+  //     currentStudent &&
+  //     previousStudent !== currentStudent
+  //   ) {
+  //     setWelcomePopup(true);
 
-    previousStudentRef.current =
-      currentStudent;
-  }, [student]);
+  //     const timer =
+  //       window.setTimeout(() => {
+  //         setWelcomePopup(false);
+  //       }, 3500);
+
+  //     previousStudentRef.current =
+  //       currentStudent;
+
+  //     return () =>
+  //       window.clearTimeout(timer);
+  //   }
+
+  //   previousStudentRef.current =
+  //     currentStudent;
+  // }, [student]);
 
 
   return (

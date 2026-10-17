@@ -7,10 +7,25 @@ import {
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import { useStore } from "../context/StoreContext";
+
 import brassLeafLogo from "../assets/images/brassleaf-logo2.png";
 
+// export default function Footer() {
+//   return (
+
 export default function Footer() {
+  const { student, setLoginOpen } = useStore();
+
+  const handleProtectedLink = (event) => {
+    if (!student) {
+      event.preventDefault();
+      setLoginOpen(true);
+    }
+  };
+
   return (
+
     <footer className="bg-slate-950 text-slate-300">
       {/* =========================================
           MAIN FOOTER
@@ -119,7 +134,8 @@ export default function Footer() {
             </Link>
 
             <Link
-              to="/cart"
+              // to="/cart"
+              onClick={handleProtectedLink}
               className="
                 text-[15px]
                 font-medium
@@ -136,6 +152,7 @@ export default function Footer() {
 
             <Link
               to="/profile"
+              onClick={handleProtectedLink}
               className="
                 text-[15px]
                 font-medium
